@@ -1,0 +1,1 @@
+include README.md LICENSE HISTORY.rst requirements.txt tests/requirements.txt flask_wechat/templates/*.j2
