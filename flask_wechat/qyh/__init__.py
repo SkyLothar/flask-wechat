@@ -7,12 +7,6 @@ import requests
 from .user import User
 
 
-def not_implemented(tip):
-    def _raise_error(*args, **kwargs):
-        raise NotImplementedError(tip)
-    return _raise_error
-
-
 class Qyh(object):
     token_url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken"
     api_url = "https://qyapi.weixin.qq.com/cgi-bin"
@@ -21,8 +15,8 @@ class Qyh(object):
     def __init__(self):
         self._auth_params = None
 
-        self._get_token = not_implemented("get_token not defined")
-        self._set_token = not_implemented("set_token not defnined")
+        self._get_token = None
+        self._set_token = None
         self._setuped = False
         self._token = None
         self._expires = None
@@ -31,6 +25,18 @@ class Qyh(object):
     @property
     def session(self):
         return self._session
+
+    @property
+    def get_token(self):
+        if self._get_token is None:
+            raise NotImplementedError("get_token not defined")
+        return self._get_token
+
+    @property
+    def set_token(self):
+        if self._set_token is None:
+            raise NotImplementedError("set_token not defined")
+        return self._set_token
 
     def init_app(self, app):
         self._auth_params = dict(
@@ -60,7 +66,7 @@ class Qyh(object):
     @property
     def token(self):
         if self._token is None:
-            self._token, self._expires = self._get_token()
+            self._token, self._expires = self.get_token()
         if self.token_expired:
             self.refresh_token()
         return self._token
@@ -75,7 +81,7 @@ class Qyh(object):
                 time.time() + res.json()["expires_in"] - self.expires_leeway
             )
             self._token = res.json()["access_token"]
-            self._set_token(self._token, self._expires)
+            self.set_token(self._token, self._expires)
         else:
             raise ValueError("refresh token failed")
 
