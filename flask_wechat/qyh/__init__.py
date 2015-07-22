@@ -32,10 +32,10 @@ class Qyh(object):
     def session(self):
         return self._session
 
-    def setup(self, cropid, secret):
+    def init_app(self, app):
         self._auth_params = dict(
-            corpid=cropid,
-            corpsecret=secret
+            corpid=app.config["WECHAT_CROPID"],
+            corpsecret=app.config["WECHAT_CROPSECRET"]
         )
         self._setuped = True
 

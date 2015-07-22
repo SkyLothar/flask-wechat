@@ -53,10 +53,12 @@ class WechatCryptor(object):
     def token(self):
         return self._token
 
-    def setup(self, key, cropid, token):
-        self._key = compat.to_bytes(base64.b64decode((key + "=")))
-        self._cropid = cropid
-        self._token = token
+    def init_app(self, app):
+        self._key = compat.to_bytes(
+            base64.b64decode(app.config["WECHAT_AESKEY"] + "=")
+        )
+        self._cropid = app.config["WECHAT_CROPID"]
+        self._token = app.config["WECHAT_TOKEN"]
         self._setuped = True
 
     def cal_signature(self, timestamp, nonce, encrypted):

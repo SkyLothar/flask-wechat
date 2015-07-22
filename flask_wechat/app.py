@@ -9,11 +9,7 @@ wechat = Blueprint("wechat", __name__, template_folder="templates")
 
 @wechat.before_app_first_request
 def setup_cryptor():
-    cryptor.setup(
-        current_app.config["WECHAT_AESKEY"],
-        current_app.config["WECHAT_CROPID"],
-        current_app.config["WECHAT_TOKEN"]
-    )
+    cryptor.init_app(current_app)
 
 
 @wechat.before_request
