@@ -104,16 +104,34 @@ class Qyh(object):
         res = self.get("/user/get", params=dict(userid=userid))
         return User(self, res.json())
 
-    def send_text_message(self, agent_id, to_user, content):
+    def send_text_message(self, agent_id, content, to_user=None):
         # wechat does not support ascii_safe json
         message = json.dumps(
             dict(
-                touser=to_user,
+                touser=to_user or "@all",
                 agentid=agent_id,
                 msgtype="text",
                 text=dict(content=content),
             ),
             ensure_ascii=False
+        )
+        res = self.post(
+            "/message/send",
+            data=message.encode("utf8"),
+            headers={"content-type": "application/json"}
+        )
+        if res.ok:
+            return res.json()
+
+    def send_news(self, agent_id, articles, to_user=None):
+        # wechat does not support ascii_safe json
+        message = json.dumps(
+            dict(
+                touser=to_user or "@all",
+                agentid=agent_id,
+                msgtype="news",
+                news=dict(articles=articles)
+            )
         )
         res = self.post(
             "/message/send",
