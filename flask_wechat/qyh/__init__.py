@@ -131,7 +131,7 @@ class Qyh(object):
                 agentid=agent_id,
                 msgtype="news",
                 news=dict(articles=articles)
-            )
+            ), ensure_ascii=False
         )
         res = self.post(
             "/message/send",
