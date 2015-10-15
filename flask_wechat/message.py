@@ -85,7 +85,7 @@ class WechatMessage(object):
 
     @property
     def reason(self):
-        return self._reasion
+        return self._reason
 
     @property
     def type(self):
