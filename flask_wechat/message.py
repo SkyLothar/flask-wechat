@@ -42,10 +42,10 @@ class WechatMessage(object):
     def __init__(self, request):
         encrypt_type = request.values.get("encrypt_type", "aes")
 
+        self._need_encrypted = encrypt_type == "aes"
         self._reason = None
         self._data = None
         self._xml = None
-        self._need_encrypted = encrypt_type == "aes"
 
         signature = None
         if request.method == "GET":
@@ -73,6 +73,10 @@ class WechatMessage(object):
             return
 
         self._data = cipher.decrypt(encrypted)
+
+    @property
+    def need_encrypted(self):
+        return self._need_encrypted
 
     @property
     def verified(self):
