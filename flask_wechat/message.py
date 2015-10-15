@@ -40,9 +40,9 @@ def encrypt(func):
 
 class WechatMessage(object):
     def __init__(self, request):
-        encrypt_type = request.values.get("encrypt_type", "aes")
+        signature = request.values.get("msg_signature")
+        self._encrypted = signature is not None
 
-        self._encrypted = encrypt_type == "aes"
         self._reason = None
         self._data = None
         self._xml = None
@@ -51,33 +51,29 @@ class WechatMessage(object):
             cipher.token, request.args["timestamp"], request.args["nonce"]
         ]
 
-        signature = None
         if request.method == "GET":
-            encrypted = request.values["echostr"]
-        else:
+            payload = request.values["echostr"]
+        elif self._encrypted:
             e_element = ET.fromstring(request.data).find("Encrypt")
             if e_element is None:
                 self._reason = "missing `Encrypt`"
-            encrypted = e_element.text
-
-        # for legacy wechat platform verification
-        if self._encrypted:
-            signature = request.values["msg_signature"]
-            hash_list.append(encrypted)
+            payload = e_element.text
+            hash_list.append(payload)
         else:
+            payload = request.data
             signature = request.values["signature"]
 
         str_to_hash = "".join(sorted(hash_list))
-        calculated = hashlib.sha1(to_bytes()).hexdigest()
+        calculated = hashlib.sha1(to_bytes(str_to_hash)).hexdigest()
 
         if calculated != signature:
             self._reason = "signature mismatch"
             return
 
         if self._encrypted:
-            self._data = cipher.decrypt(encrypted)
+            self._data = cipher.decrypt(payload)
         else:
-            self._data = request.data
+            self._data = payload
 
     @property
     def encrypted(self):
