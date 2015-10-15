@@ -4,7 +4,7 @@ from flask import current_app, g, request
 from .message import WechatMessage
 
 
-wechat = Blueprint("wechat", __name__)
+wechat = Blueprint("wechat", __name__, template_folder="templates")
 
 
 @wechat.before_request

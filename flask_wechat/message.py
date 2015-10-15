@@ -24,7 +24,7 @@ def encrypt(func):
             timestamp=timestamp,
             **msg_info
         )
-        if not message.need_encrypted:
+        if not message.encrypted:
             return plain_result
 
         encrypted_result = cipher.encrypt(plain_result)
@@ -42,41 +42,46 @@ class WechatMessage(object):
     def __init__(self, request):
         encrypt_type = request.values.get("encrypt_type", "aes")
 
-        self._need_encrypted = encrypt_type == "aes"
+        self._encrypted = encrypt_type == "aes"
         self._reason = None
         self._data = None
         self._xml = None
 
+        hash_list = [
+            cipher.token, request.args["timestamp"], request.args["nonce"]
+        ]
+
         signature = None
         if request.method == "GET":
             encrypted = request.values["echostr"]
-            # for legacy wechat platform verification
-            signature = request.values.get("signature")
         else:
             e_element = ET.fromstring(request.data).find("Encrypt")
             if e_element is None:
                 self._reason = "missing `Encrypt`"
             encrypted = e_element.text
 
-        str_to_hash = "".join(sorted([
-            cipher.token,
-            encrypted,
-            request.args["timestamp"],
-            request.args["nonce"]
-        ]))
-        calculated = hashlib.sha1(to_bytes(str_to_hash)).hexdigest()
-
-        if signature is None:
+        # for legacy wechat platform verification
+        if self._encrypted:
             signature = request.values["msg_signature"]
+            hash_list.append(encrypted)
+        else:
+            signature = request.values["signature"]
+
+        str_to_hash = "".join(sorted(hash_list))
+        calculated = hashlib.sha1(to_bytes()).hexdigest()
+
         if calculated != signature:
-            self._reasion = "signature mismatch"
+            self._reason = "signature mismatch"
             return
 
-        self._data = cipher.decrypt(encrypted)
+        if self._encrypted:
+            self._data = cipher.decrypt(encrypted)
+        else:
+            self._data = request.data
 
     @property
-    def need_encrypted(self):
-        return self._need_encrypted
+    def encrypted(self):
+        return self._encrypted
 
     @property
     def verified(self):
