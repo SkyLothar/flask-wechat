@@ -11,6 +11,11 @@ is_py2 = (_ver[0] == 2)
 is_py3 = (_ver[0] == 3)
 
 
+try:
+    from lxml.etree import ElementTree as ET
+except ImportError:
+    import xml.etree.cElementTree as ET
+
 if is_py2:
     builtin_str = str
     bytes = str
