@@ -100,6 +100,16 @@ class WechatMessage(object):
         return msg_type
 
     @property
+    def msgid(self):
+        msgid = self.xml.find("MsgId")
+        if msgid is None:
+            return "{0}-{1}@{2}".format(
+                self.from_user, self.type, self.create_time
+            )
+        else:
+            return msgid.text
+
+    @property
     def from_user(self):
         return self.xml.find("FromUserName").text
 
