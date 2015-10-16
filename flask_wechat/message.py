@@ -29,12 +29,15 @@ class WechatMessage(object):
                 # for legcay wechat platform compatibility
                 signature = request.values["signature"]
         elif self._encrypted:
+            # POST and encrypted
             e_element = ET.fromstring(request.data).find("Encrypt")
             if e_element is None:
                 self._reason = "missing `Encrypt`"
+                return
             payload = e_element.text
             hash_list.append(payload)
         else:
+            # POST and not encrypted (legacy wechat)
             payload = request.data
             signature = request.values["signature"]
 
