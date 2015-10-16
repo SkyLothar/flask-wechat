@@ -6,6 +6,7 @@ import uuid
 
 from flask import render_template
 
+from ..utils import snake_to_camel
 from .cipher import cipher
 from .compat import ET, to_bytes
 
@@ -19,8 +20,8 @@ def encrypt(func):
 
         plain_result = render_template(
             "{0}.j2".format(msg_type),
-            from_user=message.from_user,
-            to_user=message.to_user,
+            from_user=message.from_user_name,
+            to_user=message.to_user_name,
             timestamp=timestamp,
             **msg_info
         )
@@ -46,6 +47,7 @@ class WechatMessage(object):
         self._reason = None
         self._data = None
         self._xml = None
+        self._cache = {}
 
         hash_list = [
             cipher.token, request.args["timestamp"], request.args["nonce"]
@@ -91,7 +93,7 @@ class WechatMessage(object):
         return self._reason
 
     @property
-    def type(self):
+    def msg_type(self):
         msg_type = self.xml.find("MsgType").text
         if msg_type == "event":
             msg_type = self.xml.find("Event").text
@@ -99,23 +101,27 @@ class WechatMessage(object):
             msg_type = self.xml.find("EventKey").text
         return msg_type
 
+    def __getattr__(self, attr):
+        if attr in self._cache:
+            return self._cache[attr]
+
+        element = self.xml.find(snake_to_camel(attr))
+        if element is not None:
+            self._cache[attr] = element.text
+            return element.text
+        raise AttributeError(
+            "{0} has no attribute {1}".format(self.__class__, attr)
+        )
+
     @property
-    def msgid(self):
+    def msg_id(self):
         msgid = self.xml.find("MsgId")
         if msgid is None:
             return "{0}-{1}@{2}".format(
-                self.from_user, self.type, self.create_time
+                self.from_user_name, self.msg_type, self.create_time
             )
         else:
             return msgid.text
-
-    @property
-    def from_user(self):
-        return self.xml.find("FromUserName").text
-
-    @property
-    def to_user(self):
-        return self.xml.find("ToUserName").text
 
     @property
     def xml(self):
@@ -126,10 +132,6 @@ class WechatMessage(object):
     @property
     def data(self):
         return self._data
-
-    @property
-    def agent_id(self):
-        return self.xml.find("AgentID").text
 
     @property
     def signature(self):
