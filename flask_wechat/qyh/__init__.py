@@ -3,7 +3,6 @@ import time
 
 import requests
 
-from ..ext import cache
 from .user import User
 
 
@@ -11,13 +10,20 @@ class Qyh(object):
     api_url = "https://qyapi.weixin.qq.com/cgi-bin/"
     expires_leeway = 60
 
-    def __init__(self, cropid, cropsecret, cache_prefix="wqyh"):
-        self._auth_params = dict(corpid=cropid, corpsecret=cropsecret)
-        self._cachekey = "-".join([cache_prefix, cropid])
-
+    def __init__(
+        self,
+        cropid=None, cropsecret=None,
+        cache=None, cache_prefix=None
+    ):
+        self.init(cropid, cropsecret, cache, cache_prefix)
         self._token = None
         self._expires = None
         self._session = requests.session()
+
+    def init(self, cropid, cropsecret, cache, cache_prefix="wqyh"):
+        self._auth_params = dict(corpid=cropid, corpsecret=cropsecret)
+        self._cachekey = "-".join([cache_prefix, cropid])
+        self.cache = cache
 
     @property
     def cachekey(self):
@@ -28,7 +34,10 @@ class Qyh(object):
         return self._auth_params.copy()
 
     def get_token(self):
-        self._token, self._expires = cache.get(self.cachekey) or (None, None)
+        cached = self.cache.get(self.cachekey)
+        if cached is None:
+            return (None, None)
+        return self._token, self._expires
 
     def set_token(self, token, expires_in):
         expires_in = expires_in - self.expires_leeway
@@ -37,7 +46,7 @@ class Qyh(object):
         self._token = token
         self._expires = expires
 
-        cache.set((token, expires), expires_in)
+        self.cache.set((token, expires), expires_in)
 
     @property
     def token_expired(self):

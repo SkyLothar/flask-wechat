@@ -17,34 +17,19 @@ class WechatCipher(object):
     vector_len = 16
     mode = AES.MODE_CBC
 
-    def __init__(self):
-        self._key = None
-        self._appid = None
-        self._token = None
+    def __init__(self, appid=None, token=None, aeskey=None):
+        self.init_cipher(appid, token, aeskey)
 
-    @property
-    def key(self):
-        return self._key
-
-    @property
-    def init_vec(self):
-        """the first 16 bytes of key are init vector"""
-        return self.key[:self.vector_len]
-
-    @property
-    def appid(self):
-        return self._appid
-
-    @property
-    def token(self):
-        return self._token
-
-    def init_app(self, app):
-        self._key = to_bytes(
-            base64.b64decode(app.config["WECHAT_AESKEY"] + "=")
-        )
-        self._appid = app.config["WECHAT_APPID"]
-        self._token = app.config["WECHAT_TOKEN"]
+    def init_cipher(self, appid, token, aeskey=None):
+        self.appid = appid
+        self.token = token
+        if aeskey is None:
+            self.cipher = None
+        else:
+            key = to_bytes(base64.b64decode(aeskey + "="))
+            # the first 16 bytes of key are init vector
+            init_vec = key[:self.vector_len]
+            self.cipher = AES.new(key, self.mode, init_vec)
 
     def cal_signature(self, timestamp, nonce, encrypted):
         str_to_sign = "".join(sorted([
@@ -57,8 +42,7 @@ class WechatCipher(object):
         return signature
 
     def decrypt(self, secret_msg):
-        aes_cipher = self.get_new_cipher()
-        message = aes_cipher.decrypt(base64.b64decode(secret_msg))
+        message = self.cipher.decrypt(base64.b64decode(secret_msg))
         # last byte indicates padding length
         padding = int(message[-1])
         # first prefix_len bytes are random data, drop padding data and those
@@ -90,13 +74,6 @@ class WechatCipher(object):
         amount = self.block_size - len(data) % self.block_size
         padding = to_bytes(chr(amount)) * amount
         payload = data + padding
-        aes_cipher = self.get_new_cipher()
-        encrypted = aes_cipher.encrypt(payload)
+        encrypted = self.cipher.encrypt(payload)
         encoded = base64.b64encode(encrypted)
         return to_str(encoded)
-
-    def get_new_cipher(self):
-        return AES.new(self.key, self.mode, self.init_vec)
-
-
-cipher = WechatCipher()

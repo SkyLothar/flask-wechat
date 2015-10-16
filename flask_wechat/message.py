@@ -1,46 +1,16 @@
-import functools
 import hashlib
 import time
 import uuid
 
 
-from flask import render_template
-
-from .cipher import cipher
 from .compat import ET, to_bytes
-from .utils import snake_to_camel
-
-
-def encrypt(func):
-    @functools.wraps(func)
-    def encrypt_message(message, *args, **kwargs):
-        msg_type, msg_info = func(message, *args, **kwargs)
-        nonce = uuid.uuid4().hex
-        timestamp = int(time.time())
-
-        plain_result = render_template(
-            "{0}.j2".format(msg_type),
-            from_user=message.from_user_name,
-            to_user=message.to_user_name,
-            timestamp=timestamp,
-            **msg_info
-        )
-        if not message.encrypted:
-            return plain_result
-
-        encrypted_result = cipher.encrypt(plain_result)
-        signature = cipher.cal_signature(timestamp, nonce, encrypted_result)
-        final_response = render_template(
-            "encrypt.j2",
-            encrypted=encrypted_result, signature=signature,
-            nonce=nonce, timestamp=timestamp
-        )
-        return final_response
-    return encrypt_message
+from .utils import snake_to_camel, render_template
 
 
 class WechatMessage(object):
-    def __init__(self, request):
+    def __init__(self, cipher, request):
+        self.cipher = cipher
+
         signature = request.values.get("msg_signature")
         self._encrypted = signature is not None
 
@@ -137,6 +107,30 @@ class WechatMessage(object):
     def signature(self):
         return self._signature
 
-    @encrypt
     def make_text_response(self, text):
-        return "text", dict(text=text)
+        return self.render("text", text=text)
+
+    def render(self, msg_type, **msg_info):
+        nonce = uuid.uuid4().hex
+        timestamp = int(time.time())
+
+        plain_result = render_template(
+            "{0}.j2".format(msg_type),
+            from_user=self.from_user_name,
+            to_user=self.to_user_name,
+            timestamp=timestamp,
+            **msg_info
+        )
+        if not self.encrypted:
+            return plain_result
+
+        encrypted_result = self.cipher.encrypt(plain_result)
+        signature = self.cipher.cal_signature(
+            timestamp, nonce, encrypted_result
+        )
+        final_response = render_template(
+            "encrypt.j2",
+            encrypted=encrypted_result, signature=signature,
+            nonce=nonce, timestamp=timestamp
+        )
+        return final_response

@@ -1,10 +1,5 @@
-from .api import wechat
+from .cipher import WechatCipher
+from .message import WechatMessage
 
 
-def init_app(app, url_prefix="/"):
-    from .cipher import cipher
-    from .ext import cache
-    cipher.init_app(app)
-    cache.init_app(app)
-
-    app.register_blueprint(wechat, url_prefix=url_prefix)
+__all__ = ["WechatCipher", "WechatMessage"]
