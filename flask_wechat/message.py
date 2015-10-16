@@ -6,9 +6,9 @@ import uuid
 
 from flask import render_template
 
-from ..utils import snake_to_camel
 from .cipher import cipher
 from .compat import ET, to_bytes
+from .utils import snake_to_camel
 
 
 def encrypt(func):
