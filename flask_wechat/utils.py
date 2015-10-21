@@ -17,3 +17,12 @@ def render_template(template_name, **kwargs):
 
 def snake_to_camel(snake):
     return "".join(s.title() for s in snake.split("_"))
+
+
+def get_n(total, n):
+    start = 0
+    part = total[start: start + n]
+    if not part:
+        return
+    yield part
+    start += n

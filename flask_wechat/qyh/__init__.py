@@ -20,7 +20,7 @@ class Qyh(object):
         self._expires = None
         self._session = requests.session()
 
-    def init(self, cropid, cropsecret, cache, cache_prefix="wqyh"):
+    def init(self, cropid, cropsecret, cache, cache_prefix="qyh"):
         self._auth_params = dict(corpid=cropid, corpsecret=cropsecret)
         self._cachekey = "-".join([cache_prefix, cropid])
         self.cache = cache
