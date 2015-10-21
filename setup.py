@@ -36,7 +36,7 @@ setup(
     author_email=__email__,
     install_requires=requires,
     url=__url__,
-    packages=["flask_wechat", "flask_wechat.qyh"],
+    packages=["flask_wechat", "flask_wechat.qyh", "flask_wechat.platform"],
     package_data={
         "flask_wechat": ["*.j2"],
     },
