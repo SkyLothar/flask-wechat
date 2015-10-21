@@ -1,4 +1,6 @@
+import itertools
 import os
+
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 __all__ = ["render_template", "snake_to_camel"]
@@ -20,9 +22,9 @@ def snake_to_camel(snake):
 
 
 def get_n(total, n):
-    start = 0
-    part = total[start: start + n]
-    if not part:
-        return
-    yield part
-    start += n
+    part = True
+    while part:
+        part = list(itertools.islice(total, n))
+        if not part:
+            return
+        yield part

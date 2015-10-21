@@ -17,8 +17,8 @@ class Platform(object):
         params.update(access_token=self._access_token)
 
         res = self.session.post(url, **kwargs).json()
-        errcode = res.get("errcode")
-        if errcode is not None and errcode != 0:
+        errcode = res.get("errcode", 0)
+        if errcode != 0:
             raise ValueError("calling {0} error[{1}]: {2}".format(
                 url, errcode, res.get("errmsg")
             ))
@@ -59,6 +59,9 @@ class Platform(object):
             )
         )
 
+    def get_all_subscriber_info(self):
+        yield from self.get_subscriber_info(self.get_subscribers())
+
     def get_subscribers(self, next_openid=None):
         """*Iterator*
         """
@@ -74,9 +77,12 @@ class Platform(object):
 
     def get_subscriber_info(self, subscribers, lang="zh_CN"):
         """*Iterator*
+        can take str, list, tuple or generator
         """
         if isinstance(subscribers, str):
-            subscribers = [subscribers]
+            subscribers = iter([subscribers])
+        elif isinstance(subscribers, (list, tuple)):
+            subscribers = iter(subscribers)
 
         part = get_n(subscribers, 100)
         for openids in part:
