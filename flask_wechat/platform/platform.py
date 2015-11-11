@@ -40,6 +40,9 @@ class Platform(object):
     def upload_thumb(self, data, temporary=False):
         return self.upload_material("thumb", data, temporary)["media_id"]
 
+    def upload_image(self, data, temporary=False):
+        return self.upload_material("image", data, temporary)["url"]
+
     def upload_news(self, news):
         # wechat has poor utf8 json support
         data = json.dumps(dict(articles=news), ensure_ascii=False)
