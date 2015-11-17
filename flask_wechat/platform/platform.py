@@ -37,11 +37,13 @@ class Platform(object):
             json={"type": material_type}, files={"media": data}
         )
 
-    def upload_thumb(self, data, temporary=False):
-        return self.upload_material("thumb", data, temporary)["media_id"]
-
-    def upload_image(self, data, temporary=False):
-        return self.upload_material("image", data, temporary)["url"]
+    def upload_media(self, media_type, data, temporary=False):
+        if media_type == "thumb":
+            return self.upload_material("thumb", data, temporary)["media_id"]
+        elif media_type == "image":
+            return self.upload_material("image", data, temporary)["url"]
+        else:
+            raise ValueError("unsupported media_type: {0}".format(media_type))
 
     def upload_news(self, news):
         # wechat has poor utf8 json support
