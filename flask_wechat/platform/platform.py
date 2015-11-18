@@ -5,14 +5,14 @@ from ..utils import get_n
 
 
 class Platform(object):
-    base_url = "https://api.weixin.qq.com/cgi-bin/"
+    base_url = "https://api.weixin.qq.com"
     session = requests.session()
 
     def __init__(self, access_token):
         self._access_token = access_token
 
-    def call(self, uri, **kwargs):
-        url = requests.compat.urljoin(self.base_url, uri)
+    def call(self, uri, prefix="cgi-bin", **kwargs):
+        url = "/".join(self.base_url, prefix, uri)
         params = kwargs.setdefault("params", {})
         params.update(access_token=self._access_token)
 
