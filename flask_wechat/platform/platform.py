@@ -1,3 +1,4 @@
+import itertools
 import json
 import requests
 
@@ -63,15 +64,20 @@ class Platform(object):
         )
 
     def move_to_group(self, group_id, openids):
-        batch_size = 50
-        current = openids[:batch_size]
-        next_batch = openids[batch_size:]
+        if isinstance(openids, str):
+            openids = iter([openids])
+        elif isinstance(openids, (list, tuple)):
+            openids = iter(openids)
+
+        current = list(itertools.islice(openids, 50))
+        if not current:
+            return
+
         self.call(
             "groups/members/batchupdate",
             json=dict(openid_list=current, to_groupid=group_id)
         )
-        if next_batch:
-            return self.move_to_group(group_id, next_batch)
+        return self.move_to_group(group_id, openids)
 
     def create_group(self, group_name):
         return self.call(
@@ -120,17 +126,17 @@ class Platform(object):
         elif isinstance(subscribers, (list, tuple)):
             subscribers = iter(subscribers)
 
-        batch_size = 100
-        current = subscribers[:batch_size]
-        next_batch = subscribers[batch_size:]
+        current = [
+            dict(openid=oid, lang=lang)
+            for oid in itertools.islice(subscribers, 100)
+        ]
+        if not current:
+            return
 
         res = self.call(
             "user/info/batchget",
-            json=dict(
-                user_list=[dict(openid=oid, lang=lang) for oid in current]
-            )
+            json=dict(user_list=current)
         )
         for info in res["user_info_list"]:
             yield info["openid"], info
-        if next_batch:
-            yield from self.get_all_subscriber_info(next_batch, lang)
+        yield from self.get_all_subscriber_info(subscribers, lang)
