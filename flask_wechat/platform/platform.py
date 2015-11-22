@@ -139,4 +139,4 @@ class Platform(object):
         )
         for info in res["user_info_list"]:
             yield info["openid"], info
-        yield from self.get_all_subscriber_info(subscribers, lang)
+        yield from self.get_subscriber_info(subscribers, lang)
