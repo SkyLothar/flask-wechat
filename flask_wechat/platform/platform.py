@@ -1,8 +1,6 @@
 import json
 import requests
 
-from ..utils import get_n
-
 
 class Platform(object):
     base_url = "https://api.weixin.qq.com"
@@ -64,6 +62,39 @@ class Platform(object):
             )
         )
 
+    def move_to_group(self, group_id, openids):
+        batch_size = 50
+        current = openids[:batch_size]
+        next_batch = openids[batch_size:]
+        self.call(
+            "groups/members/batchupdate",
+            json=dict(openid_list=current, to_groupid=group_id)
+        )
+        if next_batch:
+            return self.move_to_group(group_id, next_batch)
+
+    def create_group(self, group_name):
+        return self.call(
+            "groups/create",
+            json=dict(group=dict(name=group_name))
+        )["group"]["id"]
+
+    def delete_group(self, group_id):
+        return self.call(
+            "groups/delete",
+            json=dict(group=dict(id=group_id))
+        )
+
+    def send_news(self, group_id, news_id, is_to_all=False):
+        return self.call(
+            "message/mass/sendall",
+            json=dict(
+                filter=dict(is_to_all=is_to_all, group_id=group_id),
+                mpnews=dict(media_id=news_id),
+                msgtype="mpnews"
+            )
+        )
+
     def get_all_subscriber_info(self):
         yield from self.get_subscriber_info(self.get_subscribers())
 
@@ -89,15 +120,17 @@ class Platform(object):
         elif isinstance(subscribers, (list, tuple)):
             subscribers = iter(subscribers)
 
-        part = get_n(subscribers, 100)
-        for openids in part:
-            res = self.call(
-                "user/info/batchget",
-                json=dict(
-                    user_list=[
-                        dict(openid=openid, lang=lang) for openid in openids
-                    ]
-                )
+        batch_size = 100
+        current = subscribers[:batch_size]
+        next_batch = subscribers[batch_size:]
+
+        res = self.call(
+            "user/info/batchget",
+            json=dict(
+                user_list=[dict(openid=oid, lang=lang) for oid in current]
             )
-            for info in res["user_info_list"]:
-                yield info["openid"], info
+        )
+        for info in res["user_info_list"]:
+            yield info["openid"], info
+        if next_batch:
+            yield from self.get_all_subscriber_info(next_batch, lang)
