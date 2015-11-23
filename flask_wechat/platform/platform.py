@@ -32,7 +32,7 @@ class Platform(object):
             prefix="datacube",
             json=dict(begin_date=date, end_date=date)
         )
-        data = defaultdict(lambda x: {})
+        data = defaultdict(lambda: {})
         for info in res["list"]:
             msgid, article_idx = info["msgid"].split("_", 1)
             if not msgid.startswith(prefix):
