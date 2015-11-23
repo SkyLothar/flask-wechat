@@ -37,7 +37,7 @@ class Platform(object):
             msgid, article_idx = info["msgid"].split("_", 1)
             if not msgid.startswith(prefix):
                 continue
-            data[info["user_source"]][int(article_idx)] = info["detail"][-1]
+            data[info["user_source"]][int(article_idx)] = info["details"][-1]
         return data
 
     def get_material_count(self):
