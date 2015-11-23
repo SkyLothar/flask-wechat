@@ -25,8 +25,8 @@ class Platform(object):
             ))
         return res
 
-    def get_statistics(self, date, msg_data_id=""):
-        prefix = msg_data_id + "_"
+    def get_statistics(self, date, msg_data_id=None):
+        prefix = "" if msg_data_id is None else msg_data_id + "_"
         res = self.call(
             "getarticletotal",
             prefix="datacube",
@@ -34,11 +34,10 @@ class Platform(object):
         )
         data = defaultdict(lambda x: {})
         for info in res["list"]:
-            msgid = info["msgid"]
+            msgid, article_idx = info["msgid"].splite("_", 1)
             if not msgid.startswith(prefix):
                 continue
-            article_idx = int(msgid[len(prefix):])
-            data[info["user_source"]][article_idx] = info["detail"][-1]
+            data[info["user_source"]][int(article_idx)] = info["detail"][-1]
         return data
 
     def get_material_count(self):
