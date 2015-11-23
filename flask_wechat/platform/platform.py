@@ -1,4 +1,6 @@
-import itertools
+from collections import defaultdict
+from itertools import islice
+
 import json
 import requests
 
@@ -23,18 +25,21 @@ class Platform(object):
             ))
         return res
 
-    def get_statistics(self, date, msg_data_id):
+    def get_statistics(self, date, msg_data_id=""):
         prefix = msg_data_id + "_"
         res = self.call(
             "getarticletotal",
             prefix="datacube",
             json=dict(begin_date=date, end_date=date)
         )
-        return {
-            data["msgid"]: data
-            for data in res["list"]
-            if data["msgid"].startswith(prefix)
-        }
+        data = defaultdict(lambda x: {})
+        for info in res["list"]:
+            msgid = info["msgid"]
+            if not msgid.startswith(prefix):
+                continue
+            article_idx = int(msgid[len(prefix):])
+            data[info["user_source"]][article_idx] = info["detail"][-1]
+        return data
 
     def get_material_count(self):
         return self.call("material/get_materialcount")
@@ -82,7 +87,7 @@ class Platform(object):
         elif isinstance(openids, (list, tuple)):
             openids = iter(openids)
 
-        current = list(itertools.islice(openids, 50))
+        current = list(islice(openids, 50))
         if not current:
             return
 
@@ -141,7 +146,7 @@ class Platform(object):
 
         current = [
             dict(openid=oid, lang=lang)
-            for oid in itertools.islice(subscribers, 100)
+            for oid in islice(subscribers, 100)
         ]
         if not current:
             return
