@@ -23,6 +23,19 @@ class Platform(object):
             ))
         return res
 
+    def get_statistics(self, date, msg_data_id):
+        prefix = msg_data_id + "_"
+        res = self.call(
+            "getarticletotal",
+            prefix="datacube",
+            json=dict(begin_date=date, end_date=date)
+        )
+        return {
+            data["msgid"]: data
+            for data in res["list"]
+            if data["msgid"].startswith(prefix)
+        }
+
     def get_material_count(self):
         return self.call("material/get_materialcount")
 
