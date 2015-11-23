@@ -34,7 +34,7 @@ class Platform(object):
         )
         data = defaultdict(lambda x: {})
         for info in res["list"]:
-            msgid, article_idx = info["msgid"].splite("_", 1)
+            msgid, article_idx = info["msgid"].split("_", 1)
             if not msgid.startswith(prefix):
                 continue
             data[info["user_source"]][int(article_idx)] = info["detail"][-1]
