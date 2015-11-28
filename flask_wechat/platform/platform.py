@@ -17,13 +17,14 @@ class Platform(object):
         params = kwargs.setdefault("params", {})
         params.update(access_token=self._access_token)
 
-        res = self.session.post(url, **kwargs).json()
-        errcode = res.get("errcode", 0)
+        res = self.session.post(url, **kwargs)
+        resjson = res.json()
+        errcode = resjson.get("errcode", 0)
         if errcode != 0:
             raise ValueError("calling {0} error[{1}]: {2}".format(
-                url, errcode, res.get("errmsg")
+                url, errcode, resjson.get("errmsg")
             ))
-        return res
+        return resjson
 
     def get_statistics(self, date, msg_data_id=None):
         res = self.call(
@@ -156,3 +157,26 @@ class Platform(object):
         for info in res["user_info_list"]:
             yield info["openid"], info
         yield from self.get_subscriber_info(subscribers, lang)
+
+    def get_qr(self, scene, expire_seconds=None):
+        info = dict(
+            expire_seconds=expire_seconds,
+            action_name="QR_SCENE",
+            action_info=dict(scene=dict(scene_id=scene))
+        )
+
+        if expire_seconds is None:
+            del info["expire_seconds"]
+            if isinstance(scene, int):
+                info["action"] = "QR_LIMIT_SCENE"
+            else:
+                info["action"] = "QR_LIMIT_STR_SCENE"
+                del info["action_info"]
+                info["action_info"] = dict(scene=dict(scene_str=scene))
+
+        res = self.call("qrcode/create", json=info)
+        ticket = res["ticket"]
+        query = requests.compat.urlencode(dict(ticket=ticket))
+        fullurl = "https://mp.weixin.qq.com/cgi-bin/showqrcode?" + query
+
+        return dict(data=res["url"], ticket=ticket, url=fullurl)
