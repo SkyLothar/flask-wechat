@@ -12,6 +12,20 @@ class Platform(object):
     def __init__(self, access_token):
         self._access_token = access_token
 
+    @classmethod
+    def get_token(cls, appid, secret):
+        url = "/".join([cls.base_url, "cgi-bin", "token"])
+        res = cls.session.get(
+            url, params=dict(
+                grant_type="client_credential",
+                appid=appid, secret=secret
+            )
+        )
+        resjson = res.json()
+        access_token = resjson["access_token"]
+        expires_in = resjson["expires_in"]
+        return access_token, expires_in
+
     def call(self, uri, prefix="cgi-bin", **kwargs):
         url = "/".join([self.base_url, prefix, uri])
         params = kwargs.setdefault("params", {})
@@ -118,8 +132,12 @@ class Platform(object):
             )
         )
 
-    def get_all_subscriber_info(self):
-        yield from self.get_subscriber_info(self.get_subscribers())
+    def get_all_subscribers_info(self, lang="zh_CN"):
+        yield from self.batch_subscribers_info(self.get_subscribers(), lang)
+
+    def get_subscriber(self, openid, lang="zh_CN"):
+        for __, info in self.batch_subscribers_info(openid, lang):
+            return info
 
     def get_subscribers(self, next_openid=None):
         """*Iterator*
@@ -134,7 +152,7 @@ class Platform(object):
             return
         yield from self.get_subscribers(res["next_openid"])
 
-    def get_subscriber_info(self, subscribers, lang="zh_CN"):
+    def batch_subscribers_info(self, subscribers, lang):
         """*Iterator*
         can take str, list, tuple or generator
         """
@@ -156,7 +174,7 @@ class Platform(object):
         )
         for info in res["user_info_list"]:
             yield info["openid"], info
-        yield from self.get_subscriber_info(subscribers, lang)
+        yield from self.batch_subscribers_info(subscribers, lang)
 
     def get_qr(self, scene, expire_seconds=None):
         info = dict(
