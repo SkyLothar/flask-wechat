@@ -197,4 +197,9 @@ class Platform(object):
         query = requests.compat.urlencode(dict(ticket=ticket))
         fullurl = "https://mp.weixin.qq.com/cgi-bin/showqrcode?" + query
 
-        return dict(data=res["url"], ticket=ticket, url=fullurl)
+        return dict(
+            data=res["url"],
+            ticket=ticket,
+            url=fullurl,
+            expires_in=expire_seconds
+        )
