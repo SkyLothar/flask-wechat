@@ -142,7 +142,7 @@ class Platform(object):
     def get_subscribers(self, next_openid=None):
         """*Iterator*
         """
-        res = self.call("user/get", json=dict(next_openid=next_openid))
+        res = self.call("user/get", params=dict(next_openid=next_openid))
         for openid in res["data"]["openid"]:
             yield openid
         # wechat claims that next_openid will be empty if no more data is
