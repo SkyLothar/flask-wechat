@@ -21,7 +21,7 @@ class Platform(object):
                 appid=appid, secret=secret
             )
         )
-        resjson = res.json()
+        resjson = res.json(strict=False)
         access_token = resjson["access_token"]
         expires_in = resjson["expires_in"]
         return access_token, expires_in
@@ -32,7 +32,7 @@ class Platform(object):
         params.update(access_token=self._access_token)
 
         res = self.session.post(url, **kwargs)
-        resjson = res.json()
+        resjson = res.json(strict=False)
         errcode = resjson.get("errcode", 0)
         if errcode != 0:
             raise ValueError("calling {0} error[{1}]: {2}".format(

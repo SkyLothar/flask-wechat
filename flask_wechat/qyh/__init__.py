@@ -77,11 +77,11 @@ class Qyh(object):
         params["access_token"] = self.token
         res = getattr(self.session, method)(url, *args, **kwargs)
         res.raise_for_status()
-        return res.json()
+        return res.json(strict=False)
 
     def find_user(self, userid):
         res = self.get("/user/get", params=dict(userid=userid))
-        return User(self, res.json())
+        return User(self, res.json(strict=False))
 
     def send(self, agent_id, msgtype, **message):
         message = json.dumps(
@@ -100,7 +100,7 @@ class Qyh(object):
             headers={"content-type": "application/json"}
         )
         if res.ok:
-            return res.json()
+            return res.json(strict=False)
 
     def send_text_message(self, agent_id, content, to_user=None):
         return self.send(
