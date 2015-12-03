@@ -61,7 +61,11 @@ class QYHMixin(object):
             # wechat does not support ascii_safe json
             ensure_ascii=False
         )
-        return self.post("message/send", json=message)
+        return self.post(
+            "message/send",
+            data=message.encode("utf8"),
+            headers={"content-type": "application/json"}
+        )
 
     def send_text_message(self, agent_id, to_user, content):
         return self.send(
