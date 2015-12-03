@@ -112,9 +112,6 @@ class WechatMessage(object):
     def signature(self):
         return self._signature
 
-    def make_text_response(self, text):
-        return self.render("text", text=text)
-
     def render(self, msg_type, **msg_info):
         nonce = uuid.uuid4().hex
         timestamp = int(time.time())
@@ -139,3 +136,11 @@ class WechatMessage(object):
             nonce=nonce, timestamp=timestamp
         )
         return final_response
+
+    def make_text_response(self, text):
+        return self.render("text", text=text)
+
+    def make_news_response(self, *news):
+        if len(news) == 0:
+            raise ValueError("news length is 0")
+        return self.render("news", news=news)
