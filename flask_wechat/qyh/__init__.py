@@ -37,7 +37,8 @@ class QYHMixin(object):
     def call(self, method, uri, kwargs):
         url = "/".join([self.api_url.rstrip("/"), uri.lstrip("/")])
         params = kwargs.pop("params", {})
-        params["access_token"] = self.access_token
+        if uri != "gettoken":
+            params["access_token"] = self.access_token
         res = getattr(self.session, method)(url, params=params, **kwargs)
         resjson = res.json(strict=False)
         if resjson["errcode"] != 0:
