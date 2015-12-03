@@ -12,16 +12,21 @@ class QYHMixin(object):
         """{cropid: "cropid", "cropsecret": "cropsecret"}"""
         raise NotImplementedError()
 
-    @property
-    def access_token(self):
-        raise NotImplementedError()
+    def get_access_token(self):
+        raise NotImplementedError("you must implement get_access_token")
 
     def set_access_token(self, token, expires_in):
-        raise NotImplementedError()
+        raise NotImplementedError("you must implement set_access_token")
+
+    @property
+    def access_token(self):
+        return self.get_access_token() or self.refresh_token()
 
     def refresh_token(self):
         res = self.get("gettoken", params=self.auth_params)
-        self.set_token(res["access_token"], res["expires_in"])
+        token = res["access_token"]
+        self.set_token(token, res["expires_in"])
+        return token
 
     def get(self, uri, *args, **kwargs):
         return self.call("get", uri, args, kwargs)
