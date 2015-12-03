@@ -28,11 +28,11 @@ class QYHMixin(object):
         self.set_token(token, res["expires_in"])
         return token
 
-    def get(self, uri, *args, **kwargs):
-        return self.call("get", uri, args, kwargs)
+    def get(self, uri, **kwargs):
+        return self.call("get", uri, kwargs)
 
-    def post(self, uri, *args, **kwargs):
-        return self.call("post", uri, args, kwargs)
+    def post(self, uri, **kwargs):
+        return self.call("post", uri, kwargs)
 
     def call(self, method, uri, kwargs):
         url = "/".join([self.api_url.rstrip("/"), uri.lstrip("/")])
