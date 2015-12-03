@@ -62,7 +62,7 @@ class QYHMixin(object):
         )
         return self.post("message/send", json=message.encode("utf8"))
 
-    def send_text_message(self, agent_id, content, to_user=None):
+    def send_text_message(self, agent_id, to_user, content):
         return self.send(
             agent_id, "text",
             to_user=to_user, text=content
