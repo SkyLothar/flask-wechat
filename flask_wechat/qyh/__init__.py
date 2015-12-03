@@ -1,64 +1,23 @@
 import json
-import time
 
 import requests
 
-from .user import User
 
-
-class Qyh(object):
+class QYHMixin(object):
     api_url = "https://qyapi.weixin.qq.com/cgi-bin/"
-    expires_leeway = 60
-
-    def __init__(
-        self,
-        cropid=None, cropsecret=None,
-        cache=None, cache_prefix=None
-    ):
-        self.init(cropid, cropsecret, cache, cache_prefix)
-        self._token = None
-        self._expires = None
-        self._session = requests.session()
-
-    def init(self, cropid, cropsecret, cache, cache_prefix="qyh"):
-        self._auth_params = dict(corpid=cropid, corpsecret=cropsecret)
-        self._cachekey = "-".join([cache_prefix, cropid])
-        self.cache = cache
-
-    @property
-    def cachekey(self):
-        return self._cachekey
+    session = requests.session()
 
     @property
     def auth_params(self):
-        return self._auth_params.copy()
-
-    def get_token(self):
-        cached = self.cache.get(self.cachekey)
-        if cached is None:
-            return (None, None)
-        return self._token, self._expires
-
-    def set_token(self, token, expires_in):
-        expires_in = expires_in - self.expires_leeway
-        expires = int(time.time() + expires_in)
-
-        self._token = token
-        self._expires = expires
-
-        self.cache.set((token, expires), expires_in)
+        """{cropid: "cropid", "cropsecret": "cropsecret"}"""
+        raise NotImplementedError()
 
     @property
-    def token_expired(self):
-        return self._expires is None or self._expires < time.time()
+    def access_token(self):
+        raise NotImplementedError()
 
-    @property
-    def token(self):
-        if self._token is None:
-            self.get_token()
-        if self.token_expired:
-            self.refresh_token()
-        return self._token
+    def set_access_token(self, token, expires_in):
+        raise NotImplementedError()
 
     def refresh_token(self):
         res = self.get("gettoken", params=self.auth_params)
@@ -70,18 +29,15 @@ class Qyh(object):
     def post(self, uri, *args, **kwargs):
         return self.call("post", uri, args, kwargs)
 
-    def call(self, method, uri, args, kwargs):
-        url = requests.compat.urljoin(self.api_url, uri)
-
-        params = kwargs.setdefault("params", {})
-        params["access_token"] = self.token
-        res = getattr(self.session, method)(url, *args, **kwargs)
-        res.raise_for_status()
+    def call(self, method, uri, kwargs):
+        url = "/".join([self.api_url.rstrip("/"), uri.lstrip("/")])
+        params = kwargs.pop("params", {})
+        params["access_token"] = self.access_token
+        res = getattr(self.session, method)(url, params=params, **kwargs)
         return res.json(strict=False)
 
     def find_user(self, userid):
-        res = self.get("/user/get", params=dict(userid=userid))
-        return User(self, res.json(strict=False))
+        return self.get("user/get", params=dict(userid=userid))
 
     def send(self, agent_id, msgtype, **message):
         message = json.dumps(
@@ -94,13 +50,7 @@ class Qyh(object):
             # wechat does not support ascii_safe json
             ensure_ascii=False
         )
-        res = self.post(
-            "/message/send",
-            data=message.encode("utf8"),
-            headers={"content-type": "application/json"}
-        )
-        if res.ok:
-            return res.json(strict=False)
+        return self.post("message/send", json=message.encode("utf8"))
 
     def send_text_message(self, agent_id, content, to_user=None):
         return self.send(
@@ -108,7 +58,7 @@ class Qyh(object):
             to_user=to_user, text=content
         )
 
-    def send_news(self, agent_id, articles, to_user=None):
+    def send_news(self, agent_id, to_user, *articles):
         return self.send(
             agent_id, "news",
             to_user=to_user, news=dict(articles=articles)
