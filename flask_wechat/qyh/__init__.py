@@ -20,12 +20,12 @@ class QYHMixin(object):
 
     @property
     def access_token(self):
-        return self.get_access_token() or self.refresh_token()
+        return self.get_access_token() or self.refresh_access_token()
 
-    def refresh_token(self):
+    def refresh_access_token(self):
         res = self.get("gettoken", params=self.auth_params)
         token = res["access_token"]
-        self.set_token(token, res["expires_in"])
+        self.set_access_token(token, res["expires_in"])
         return token
 
     def get(self, uri, **kwargs):
