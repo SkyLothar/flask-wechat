@@ -25,7 +25,9 @@ class WechatMessage(object):
 
         if request.method == "GET":
             payload = request.values["echostr"]
-            if not self._encrypted:
+            if self._encrypted:
+                hash_list.append(payload)
+            else:
                 # for legcay wechat platform compatibility
                 signature = request.values["signature"]
         elif self._encrypted:
