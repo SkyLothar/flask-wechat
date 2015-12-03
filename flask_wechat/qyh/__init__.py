@@ -39,7 +39,12 @@ class QYHMixin(object):
         params = kwargs.pop("params", {})
         params["access_token"] = self.access_token
         res = getattr(self.session, method)(url, params=params, **kwargs)
-        return res.json(strict=False)
+        resjson = res.json(strict=False)
+        if resjson["errcode"] != 0:
+            raise ValueError("calling {0} error: {1}".format(
+                uri, resjson.get("errmsg") or res.text
+            ))
+        return resjson
 
     def find_user(self, userid):
         return self.get("user/get", params=dict(userid=userid))
