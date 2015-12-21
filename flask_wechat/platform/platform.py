@@ -94,6 +94,16 @@ class Platform(object):
             )
         )
 
+    def preview_news_with_wxname(self, wxname, news_id):
+        return self.call(
+            "message/mass/preview",
+            json=dict(
+                towxname=wxname,
+                mpnews=dict(media_id=news_id),
+                msgtype="mpnews"
+            )
+        )
+
     def move_to_group(self, group_id, openids):
         if isinstance(openids, str):
             openids = iter([openids])
