@@ -142,6 +142,16 @@ class Platform(object):
             )
         )
 
+    def send_news_to_user(self, openids, news_id):
+        return self.call(
+            "message/mass/send",
+            json=dict(
+                touser=openids,
+                mpnews=dict(media_id=news_id),
+                msgtype="mpnews"
+            )
+        )
+
     def get_all_subscribers_info(self, lang="zh_CN"):
         yield from self.batch_subscribers_info(self.get_subscribers(), lang)
 
