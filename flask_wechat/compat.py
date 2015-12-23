@@ -12,7 +12,7 @@ is_py3 = (_ver[0] == 3)
 
 
 try:
-    from lxml.etree import ElementTree as ET
+    from lxml import etree as ET
 except ImportError:
     import xml.etree.cElementTree as ET
 
