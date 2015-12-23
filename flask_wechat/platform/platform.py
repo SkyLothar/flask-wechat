@@ -152,6 +152,10 @@ class Platform(object):
             )
         )
 
+    def check_message(self, msg_id):
+        info = self.call("message/mass/get", json=dict(msg_id=msg_id))
+        return info["msg_status"] == "SEND_SUCCESS"
+
     def get_all_subscribers_info(self, lang="zh_CN"):
         yield from self.batch_subscribers_info(self.get_subscribers(), lang)
 
