@@ -1,9 +1,9 @@
-Flask Wechat
-============
+Flask Wechat Kit
+================
 
 **work in progress...**
 
-超轻量的 微信 公告号/企业号 Blueprint
+超轻量的 微信 公告号/企业号 工具
 
 - 请求的验证及签名
 - 简单的request解析
@@ -11,4 +11,5 @@ Flask Wechat
 
 
 ## 安装
-`pip install https://github.com/skylothar/flask-wechat`
+`pip install git+https://github.com/skylothar/flask-wechat`
+`pip install flask-wechat-kit`

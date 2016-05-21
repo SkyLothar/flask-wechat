@@ -28,7 +28,7 @@ with open("README.md", "r", "utf-8") as f:
 
 
 setup(
-    name="flask-wechat",
+    name="flask-wechat-kit",
     version=__version__,
     description="flask blueprint for wechat",
     long_description=readme,

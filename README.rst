@@ -1,6 +1,0 @@
-Configs
--------
-
-- WECHAT_AESKEY
-- WECHAT_APPID
-- WECHAT_TOKEN
